@@ -13,18 +13,11 @@ class DistanceTest:
     def execute(self):
         for i in range(1, 10):
             airsim.wait_key("Trykk")
-            self.client.moveByVelocityZAsync(0, 0, -1, 1, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 90)).join()
-            self.client.moveByVelocityZAsync(0, 0, -1, 1, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 0)).join()
-            self.client.hoverAsync()
+            # self.client.moveByVelocityZAsync(1, 0, -1, 1, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 90)).join()
+            self.client.moveByVelocityZAsync(0, -1, -1, 1, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 0)).join()
+            self.client.moveByVelocityAsync(0, 0, 0, 2)
             self.dist()
 
-        # self.client.moveByVelocityZAsync(0, 0, -1, 5, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 90)).join()
-        # self.dist()
-        # self.client.moveByVelocityZAsync(0, 0, -1, 5, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 90)).join()
-        # self.dist()
-        # self.client.moveByVelocityZAsync(0, 0, -1, 5, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 90)).join()
-        # self.dist()
-        # self.client.moveByVelocityZAsync(0, 0, -1, 5, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 90)).join()
 
     def parse_lidarData(self, data):
 
