@@ -3,13 +3,6 @@ import airsim
 import time
 import math
 
-import numpy as np
-import os
-import tempfile
-import pprint
-import cv2
-import curses
-
 # connect to the AirSim simulator
 client = airsim.MultirotorClient()
 client.confirmConnection()
