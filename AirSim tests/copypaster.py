@@ -30,7 +30,7 @@ class LidarTest:
         s = pprint.pformat(state)
         #print("state: %s" % s)
 
-        self.client.takeoffAsync().join()
+        # self.client.takeoffAsync().join()
 
         state = self.client.getMultirotorState()
         #print("state: %s" % pprint.pformat(state))
@@ -57,21 +57,23 @@ class LidarTest:
             
             points = self.parse_lidarData(lidarData)
             distances = []
+            pose = self.client.simGetVehiclePose()
             for p in points:
-                distances.append((p, lidarData.pose.position.distance_to(airsim.Vector3r(p[0], p[1], p[2]))))
+                distances.append((p, pose.position.distance_to(airsim.Vector3r(p[0], p[1], p[2]))))
             distances.sort(key=lambda tup: tup[1])
-            _, _, yaw  = airsim.to_eularian_angles(self.client.simGetVehiclePose().orientation)
+            _, _, yaw  = airsim.to_eularian_angles(pose.orientation)
             vx = math.cos(yaw) * v
             vy = math.sin(yaw) * v
-            for p in distances:
-                d = p[1]
-                if(d < 9):
-                    self.client.moveByVelocityZAsync(vx, vy, -1, 0.5, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, (1/d) * 100))
-                    print("Turning by: " + str((1/d) * 100))
-                    break;
-                else:
-                    self.client.moveByVelocityZAsync(vx, vy, -1, 0.5, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 0))
-            time.sleep(0.5)
+            d = distances[0][1]
+            print(d)
+            print(distances[0][1], distances[int(len(distances) / 2)][1], distances[len(distances) - 1][1])
+            if(d < 4):
+                self.client.moveByVelocityZAsync(vx, vy, -1, 0.5, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, (1/d) * 100))
+                print("Turning right by: " + str((1/d) * 100))
+            else:
+                self.client.moveByVelocityZAsync(vx, vy, -1, 0.5, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, -(1/d) * 100))
+                print("Turning left by: " + str((1/d) * 100))
+            time.sleep(1)
 
     def parse_lidarData(self, data):
 
