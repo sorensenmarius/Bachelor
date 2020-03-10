@@ -17,6 +17,13 @@
           "HorizontalFOVEnd": 20,
           "DrawDebugPoints": false
         }
+      },
+      "Cameras": {
+        "front-center": {
+          "CaptureSettings": {
+            "ImageType": 0
+          }
+        }
       }
     }
   }
