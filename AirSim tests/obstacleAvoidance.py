@@ -27,6 +27,9 @@ class ObstacleAvoidance:
         self.waitTime = 0.5
         self.running = True
 
+        # The goal the drone is trying to reach
+        self.goal = airsim.Vector3r(-200, 0, -2)
+
     # Main control of high-level logic
     def execute(self):
         # Get and format image data
@@ -47,14 +50,14 @@ class ObstacleAvoidance:
     # Main collision avoidance logic
     def avoid(self):
         if self.calculateTooClosePercentage(self.middle) > self.percentage:
-            print("Left: " + str(self.calculateTooClosePercentage(self.left)))
-            print("Right: " + str(self.calculateTooClosePercentage(self.right)))
             if self.calculateTooClosePercentage(self.left) > self.calculateTooClosePercentage(self.right):
                 self.turnRight()
             else:
                 self.turnLeft()
         else:
-            self.goForward()
+            # TODO - Turn towards finish point if possible
+            # self.goForward()
+            self.turnTowardsGoal()
     
     # Sets the depth data to the formated matrix
     # Values in the matrix are meters from the camera (I think :S)
@@ -113,50 +116,51 @@ class ObstacleAvoidance:
 
     # Movement functions
     
-
-    # Flies the drone straight forward
-    # TODO - Scale speed with distance to obstacle
-    def goForward(self):
-        vx = math.cos(self.yaw)
-        vy = math.sin(self.yaw)
+    def fly(self, yaw):
+        vx = math.cos(yaw)
+        vy = math.sin(yaw)
         self.client.moveByVelocityZAsync(
             vx,
             vy,
             -1,
-            self.waitTime
+            self.waitTime,
+            airsim.DrivetrainType.ForwardOnly,
+            airsim.YawMode(False, 0)
         )
+    
+    # Flies the drone straight forward
+    # TODO - Scale speed with distance to obstacle
+    def goForward(self):
+        self.fly(self.yaw)
 
     # Turns the drone to the right
     # TODO - Scale turn degree
     def turnRight(self):
         yaw = self.yaw + math.pi / 8
-        vx = math.cos(yaw)
-        vy = math.sin(yaw)
-        self.client.moveByVelocityZAsync(
-            vx,
-            vy,
-            -1,
-            self.waitTime,
-            airsim.DrivetrainType.ForwardOnly,
-            airsim.YawMode(False, 0)
-        )
-
+        self.fly(yaw)
 
     # Turns the drone to the left
     # TODO - Scale turn degree
     def turnLeft(self):
         yaw = self.yaw - math.pi / 8
-        vx = math.cos(yaw)
-        vy = math.sin(yaw)
-        self.client.moveByVelocityZAsync(
-            vx,
-            vy,
-            -1,
-            self.waitTime,
-            airsim.DrivetrainType.ForwardOnly,
-            airsim.YawMode(False, 0)
-        )
+        self.fly(yaw)
 
+    # Checks if the drone can turn towards the goal
+    # TODO - Scale how much it turns
+    #   Maybe use % of what way we are turning to scale
+    def turnTowardsGoal(self):
+        pos = self.client.simGetVehiclePose().position
+        dX = pos.x_val - self.goal.x_val
+        dY = pos.y_val - self.goal.y_val
+        testYaw = math.atan2(dY, dX)
+        yaw = self.yaw
+        if(yaw > 0):
+            if(self.calculateTooClosePercentage(self.left) < self.percentage):
+                yaw = self.yaw - (self.yaw - testYaw) / 5
+        else:
+            if(self.calculateTooClosePercentage(self.right) < self.percentage):
+                yaw = self.yaw - (self.yaw - testYaw) / 5
+        self.fly(yaw)
 
     # Safely reset and release AirSim control
     def stop(self):
