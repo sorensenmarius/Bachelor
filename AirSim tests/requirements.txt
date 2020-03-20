@@ -3,3 +3,4 @@ msgpack-rpc-python==0.4.1
 numpy==1.18.1
 tornado==4.5.3
 pillow==7.0.0
+matplotlib==3.2.1
