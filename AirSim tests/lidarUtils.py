@@ -13,10 +13,13 @@ def parseLidarData(data):
 
 def writeLidarDataToDisk(data, foldername, filename):
     """Writes the lidar data to the spicified folder with the specified file name"""
+    try:
+        with open(f'{foldername}/{filename}.txt', 'a') as f:
+            for point in data:
+                f.write(f'{point[0]},{point[1]},{point[2]}\n')
+    except FileNotFoundError:
+        print(f'LidarData not saved. Directory "{foldername}" not found.')
 
-    with open(f'{foldername}/{filename}.txt', 'a') as f:
-        for point in data:
-            f.write(f'{point[0]},{point[1]},{point[2]}\n')
 
 def getLidarData(client):
     """Gets and returns the formatted list of lidar data"""
