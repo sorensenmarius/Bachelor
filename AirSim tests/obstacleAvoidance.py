@@ -4,6 +4,7 @@ import math
 import time
 
 import utilities as utils
+import lidarUtils
 
 import numpy as np
 
@@ -45,6 +46,8 @@ class ObstacleAvoidance:
             self.splitImageData()
             self.updateDronePose()
             self.avoid()
+            lidarUtils.handleLidarData(self.client)
+            utils.savePositionToFile(self.client)
             time.sleep(self.waitTime)
 
     # Main collision avoidance logic
