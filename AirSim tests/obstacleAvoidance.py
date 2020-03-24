@@ -29,7 +29,12 @@ class ObstacleAvoidance:
         self.running = True
 
         # The goal the drone is trying to reach
-        self.goal = airsim.Vector3r(-200, 0, -2)
+        # self.goal = airsim.Vector3r(70, -70, -2)
+
+        # List of airsim.Vector3r to follow
+        self.path = utils.loadPathFromPotreeJSON()
+        self.pathIterator = 0
+        self.goal = self.path[self.pathIterator]
 
     # Main control of high-level logic
     def execute(self):
@@ -46,9 +51,11 @@ class ObstacleAvoidance:
             self.splitImageData()
             self.updateDronePose()
             self.avoid()
-            lidarUtils.handleLidarData(self.client)
-            utils.savePositionToFile(self.client)
+            self.updateGoal()
+            # lidarUtils.handleLidarData(self.client)
+            # utils.savePositionToFile(self.client)
             time.sleep(self.waitTime)
+        print("Ended")
 
     # Main collision avoidance logic
     def avoid(self):
@@ -72,7 +79,7 @@ class ObstacleAvoidance:
             if depth[i] > 1: depth[i] = 1
 
             # Value 255 = 100 meters range
-            # This multiplication converts from 0 - 255 value to approx. meters in range 0 - 100
+            # This multiplication converts from 0 - 255 value to approx. meters in range 0 - 100 for human readability
             depth[i] *= 255 * 0.392157
         depth = depth.reshape(result.height, result.width)
         self.depth = depth
@@ -118,7 +125,6 @@ class ObstacleAvoidance:
         self.pitch, self.roll, self.yaw = airsim.to_eularian_angles(self.client.simGetVehiclePose().orientation)
 
     # Movement functions
-    
     def fly(self, yaw):
         vx = math.cos(yaw)
         vy = math.sin(yaw)
@@ -153,17 +159,26 @@ class ObstacleAvoidance:
     #   Maybe use % of what way we are turning to scale
     def turnTowardsGoal(self):
         pos = self.client.simGetVehiclePose().position
-        dX = pos.x_val - self.goal.x_val
-        dY = pos.y_val - self.goal.y_val
+        dX = self.goal.x_val - pos.x_val 
+        dY = self.goal.y_val - pos.y_val 
         testYaw = math.atan2(dY, dX)
         yaw = self.yaw
-        if(yaw > 0):
+        if(testYaw < yaw):
             if(self.calculateTooClosePercentage(self.left) < self.percentage):
                 yaw = self.yaw - (self.yaw - testYaw) / 5
         else:
             if(self.calculateTooClosePercentage(self.right) < self.percentage):
                 yaw = self.yaw - (self.yaw - testYaw) / 5
         self.fly(yaw)
+
+    def updateGoal(self):
+        if self.client.simGetVehiclePose().position.distance_to(self.goal) < 3:
+            if self.pathIterator < len(self.path):
+                self.pathIterator += 1
+                print(f'New goal set')
+            else:
+                self.running = False
+            self.goal = self.path[self.pathIterator]
 
     # Safely reset and release AirSim control
     def stop(self):
