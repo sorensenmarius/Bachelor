@@ -29,12 +29,12 @@ class ObstacleAvoidance:
         self.running = True
 
         # The goal the drone is trying to reach
-        # self.goal = airsim.Vector3r(70, -70, -2)
+        self.goal = airsim.Vector3r(0, 200, -2)
 
         # List of airsim.Vector3r to follow
-        self.path = utils.loadPathFromPotreeJSON()
-        self.pathIterator = 0
-        self.goal = self.path[self.pathIterator]
+        # self.path = utils.loadPathFromPotreeJSON()
+        # self.pathIterator = 0
+        # self.goal = self.path[self.pathIterator]
 
     # Main control of high-level logic
     def execute(self):
@@ -47,13 +47,15 @@ class ObstacleAvoidance:
         # else
         #   Go straight
         while self.running:
+            start = time.thread_time()
             self.getImageData()
             self.splitImageData()
             self.updateDronePose()
             self.avoid()
             self.updateGoal()
-            # lidarUtils.handleLidarData(self.client)
-            # utils.savePositionToFile(self.client)
+            lidarUtils.handleLidarData(self.client, filename="OdinMaze")
+            utils.savePositionToFile(self.client, filename="OdinBlocks")
+            print(time.thread_time() - start)
             time.sleep(self.waitTime)
         print("Ended")
 
@@ -132,7 +134,7 @@ class ObstacleAvoidance:
             vx,
             vy,
             -1,
-            self.waitTime,
+            2,
             airsim.DrivetrainType.ForwardOnly,
             airsim.YawMode(False, 0)
         )
