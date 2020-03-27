@@ -2,11 +2,19 @@ import setup_path
 import airsim
 import math
 import time
+import argparse
 
 import utilities as utils
 import lidarUtils
 
 import numpy as np
+
+def parseCLIargs():
+    parser = argparse.ArgumentParser("parses arguments from cli")
+    parser.add_argument("-sl","-save_lidar",default=False ,action="store_true")
+    args = parser.parse_args()
+    saveBoolean = args.sl
+    return saveBoolean
 
 class ObstacleAvoidance:
     def __init__(self):
@@ -37,6 +45,7 @@ class ObstacleAvoidance:
         # self.pathIterator = 0
         # self.goal = self.path[self.pathIterator]
 
+        self.saveLidarData =  parseCLIargs()
         self.imageFolderName = utils.setImageFoldername()
         self.imageNumber = 0
         self.imageFrequency = 10
@@ -50,6 +59,17 @@ class ObstacleAvoidance:
             self.updateDronePose()
             self.avoid()
             self.updateGoal()
+
+            # Thought this was the part that was responsible for saving lidar data
+            # Made the variable initialized in init decide if the program saves LidaData
+            if self.saveLidarData:
+                lidarUtils.handleLidarData(self.client, filename="OdinBlocks")
+                utils.savePositionToFile(self.client, filename="OdinBlocks")
+                if(time.thread_time() - self.lastImageTime > self.imageFrequency):
+                    self.saveImage()
+                    self.imageNumber += 1
+                    self.lastImageTime = time.thread_time()
+
             # lidarUtils.handleLidarData(self.client, filename="OdinBlocks")
             # utils.savePositionToFile(self.client, filename="OdinBlocks")
             # if(time.thread_time() - self.lastImageTime > self.imageFrequency):
@@ -221,6 +241,7 @@ class ObstacleAvoidance:
 
 # main
 if __name__ == "__main__":
+    
     avoid = ObstacleAvoidance()
     try:
         avoid.execute()
