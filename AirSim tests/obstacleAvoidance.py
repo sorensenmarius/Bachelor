@@ -9,8 +9,8 @@ import lidarUtils
 import numpy as np
 
 class ObstacleAvoidance:
-    # Setup connection to AirSim
     def __init__(self):
+        """ Setup connection tot AirSim """
         self.client = airsim.MultirotorClient()
         self.client.confirmConnection()
         self.client.enableApiControl(True)        
@@ -27,6 +27,7 @@ class ObstacleAvoidance:
         # Time to wait each step in seconds
         self.waitTime = 0.5
         self.running = True
+        self.iteration = 0
 
         # The goal the drone is trying to reach
         self.goal = airsim.Vector3r(0, 200, -2)
@@ -36,44 +37,45 @@ class ObstacleAvoidance:
         # self.pathIterator = 0
         # self.goal = self.path[self.pathIterator]
 
-    # Main control of high-level logic
+        self.imageFolderName = utils.setImageFoldername()
+        self.imageNumber = 0
+        self.imageFrequency = 10
+        self.lastImageTime = time.thread_time()
+
     def execute(self):
-        # Get and format image data
-        # Split image data in 3 parts
-        # Check if middle part is too close
-        # if(middleTooClose)
-        #   Check right and left
-        #   Turn
-        # else
-        #   Go straight
+        """ Main control and high-level logic """
         while self.running:
-            start = time.thread_time()
             self.getImageData()
             self.splitImageData()
             self.updateDronePose()
             self.avoid()
             self.updateGoal()
-            lidarUtils.handleLidarData(self.client, filename="OdinMaze")
-            utils.savePositionToFile(self.client, filename="OdinBlocks")
-            print(time.thread_time() - start)
-            time.sleep(self.waitTime)
+            # lidarUtils.handleLidarData(self.client, filename="OdinBlocks")
+            # utils.savePositionToFile(self.client, filename="OdinBlocks")
+            # if(time.thread_time() - self.lastImageTime > self.imageFrequency):
+            #     self.saveImage()
+            #     self.imageNumber += 1
+            #     self.lastImageTime = time.thread_time()
+            self.iteration += 1
+            # time.sleep(self.waitTime)
         print("Ended")
 
-    # Main collision avoidance logic
     def avoid(self):
+        """ Main collision avoidance logic """
         if self.calculateTooClosePercentage(self.middle) > self.percentage:
             if self.calculateTooClosePercentage(self.left) > self.calculateTooClosePercentage(self.right):
                 self.turnRight()
             else:
                 self.turnLeft()
         else:
-            # TODO - Turn towards finish point if possible
-            # self.goForward()
             self.turnTowardsGoal()
     
-    # Sets the depth data to the formated matrix
-    # Values in the matrix are meters from the camera (I think :S)
+
     def getImageData(self):
+        """
+            Sets the depth data to the formated matrix
+            Values in the matrix are meters from the camera
+        """
         responses = self.client.simGetImages([airsim.ImageRequest(0, airsim.ImageType.DepthVis, True)])
         result = responses[0]
         depth = np.array(result.image_data_float, dtype=np.float32)
@@ -86,8 +88,8 @@ class ObstacleAvoidance:
         depth = depth.reshape(result.height, result.width)
         self.depth = depth
     
-    # Splits the image data in 3 matrices which indicate the three possible moves (left, middle, right)
     def splitImageData(self):
+        """ Splits the image data in 3 matrices which indicate the three possible moves (left, middle, right) """
         # Split and only consider the middle data
         vsplit = np.array_split(self.depth, 3)[1]
         # 1 indicates what axis to split
@@ -96,8 +98,9 @@ class ObstacleAvoidance:
         self.middle = splits[1]
         self.right = splits[2]
     
-    # Calculates the percentage of pixels in a matrix that is under a threshold
+
     def calculateTooClosePercentage(self, m):
+        """ Calculates the percentage of pixels in a matrix that is under a threshold """
         counter = 0
         sum = 0
         for y in m:
@@ -106,8 +109,10 @@ class ObstacleAvoidance:
                     counter += 1
                 sum += 1
         return counter / sum * 100
+
     
     def showImage(self):
+        """ Shows a plot of what the drone sees, with rectangles indicating the different segments the drone considers """
         import matplotlib.pyplot as plt
         import matplotlib.patches as patches
 
@@ -124,10 +129,12 @@ class ObstacleAvoidance:
         plt.show()
 
     def updateDronePose(self):
+        """ Sets the pitch, roll and yaw of the drone to the ObejectAvoidance object """
         self.pitch, self.roll, self.yaw = airsim.to_eularian_angles(self.client.simGetVehiclePose().orientation)
 
     # Movement functions
     def fly(self, yaw):
+        """ Flies toward the given yaw """
         vx = math.cos(yaw)
         vy = math.sin(yaw)
         self.client.moveByVelocityZAsync(
@@ -139,27 +146,30 @@ class ObstacleAvoidance:
             airsim.YawMode(False, 0)
         )
     
-    # Flies the drone straight forward
-    # TODO - Scale speed with distance to obstacle
+        
     def goForward(self):
+        """ Flies the drone straight forward """
+        # TODO - Scale speed with distance to obstacle
         self.fly(self.yaw)
 
-    # Turns the drone to the right
-    # TODO - Scale turn degree
     def turnRight(self):
-        yaw = self.yaw + math.pi / 8
+        """ Turns the drone to the right by PI/32 radians """
+        # TODO - Scale turn degree
+        yaw = self.yaw + math.pi / 32
         self.fly(yaw)
 
-    # Turns the drone to the left
-    # TODO - Scale turn degree
     def turnLeft(self):
-        yaw = self.yaw - math.pi / 8
+        """ Turns the drone to the left by PI/32 radians """
+        # TODO - Scale turn degree
+        yaw = self.yaw - math.pi / 32
         self.fly(yaw)
 
-    # Checks if the drone can turn towards the goal
-    # TODO - Scale how much it turns
-    #   Maybe use % of what way we are turning to scale
     def turnTowardsGoal(self):
+        """ 
+            Turns the drone towards the goal in self.goal
+            Checks if it is safe to turn left or right before turning
+                Goes straight if turning is not safe
+        """
         pos = self.client.simGetVehiclePose().position
         dX = self.goal.x_val - pos.x_val 
         dY = self.goal.y_val - pos.y_val 
@@ -174,6 +184,10 @@ class ObstacleAvoidance:
         self.fly(yaw)
 
     def updateGoal(self):
+        """ 
+            Updates self.goal if the drone is closer than 3 meters to the current goal
+            Should be used if the drone is following a path
+        """
         if self.client.simGetVehiclePose().position.distance_to(self.goal) < 3:
             if self.pathIterator < len(self.path):
                 self.pathIterator += 1
@@ -181,9 +195,24 @@ class ObstacleAvoidance:
             else:
                 self.running = False
             self.goal = self.path[self.pathIterator]
+    
+    def saveImage(self):
+        """
+            Gets an image from the client and saves it to the folder specified in self.imageFolderName
+        """
+        import os
+        import airsim
+        
+        img = self.client.simGetImage("0", airsim.ImageType.Scene)
+        # airsim.write_file(os.path.normpath(f'{foldername}/{str(self.imageNumber)}.png'), img)
+        with open(f'{self.imageFolderName}/{str(self.imageNumber)}.png', 'wb') as f:
+            f.write(img)
+        with open(f'{self.imageFolderName}/pos.txt', 'a') as f:
+            pos = self.client.simGetVehiclePose().position
+            f.write(f'{self.imageNumber} {pos.x_val} {pos.y_val} {pos.z_val}\n')
 
-    # Safely reset and release AirSim control
     def stop(self):
+        """ Safely reset and release AirSim control """
         airsim.wait_key('Press any key to reset to original state')
         self.client.armDisarm(False)
         self.client.reset()

@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from threading import Timer
 
 def showMatrix(m):
     fig = plt.figure()
@@ -31,3 +32,18 @@ def loadPathFromPotreeJSON(foldername="paths", filename="potreePath"):
             points.append(airsim.Vector3r(p[0], p[1], p[2] * -1))
 
         return points[::-1]
+
+
+def setImageFoldername(foldername="pics"):
+    """ Increments the given foldername until it find a folder that is not taken """
+    import os
+    import airsim
+
+    nameCounter = 0
+    currentFoldername = foldername
+    while os.path.exists(f'./pictures/{currentFoldername}'):
+        currentFoldername = foldername + str(nameCounter)
+        nameCounter += 1
+    os.makedirs(f'./pictures/{currentFoldername}')
+    return f'./pictures/{currentFoldername}'
+
