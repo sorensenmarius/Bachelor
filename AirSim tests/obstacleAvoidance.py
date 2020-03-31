@@ -10,11 +10,16 @@ import lidarUtils
 import numpy as np
 
 def parseCLIargs():
-    parser = argparse.ArgumentParser("parses arguments from cli")
+    parser = argparse.ArgumentParser("Parses arguments from cli")
     parser.add_argument("-sl","-save_lidar",default=False ,action="store_true")
+    parser.add_argument("points", nargs=3, default=[0,0,0],help="Specifies a point the \
+    drone will try to reach")
+    #parser.add_argument("path",help="Specifies a path the drone will try to reach from \
+    #a given file")
     args = parser.parse_args()
     saveBoolean = args.sl
-    return saveBoolean
+    points = [int(args.points[0]),int(args.points[1]),int(args.points[2])]
+    return [saveBoolean, points]
 
 class ObstacleAvoidance:
     def __init__(self):
@@ -23,6 +28,7 @@ class ObstacleAvoidance:
         self.client.confirmConnection()
         self.client.enableApiControl(True)        
         self.client.takeoffAsync().join()
+        self.inputArgs = parseCLIargs()
 
 
 
@@ -38,14 +44,17 @@ class ObstacleAvoidance:
         self.iteration = 0
 
         # The goal the drone is trying to reach
-        self.goal = airsim.Vector3r(0, 200, -2)
+        #self.goal = airsim.Vector3r(0, 200, -2)
+
+        self.goal = airsim.Vector3r(self.inputArgs[1][0], self.inputArgs[1][1], self.inputArgs[1][2])
+        print("The goal is now: "+str(self.goal))
 
         # List of airsim.Vector3r to follow
         # self.path = utils.loadPathFromPotreeJSON()
         # self.pathIterator = 0
         # self.goal = self.path[self.pathIterator]
 
-        self.saveLidarData =  parseCLIargs()
+        self.saveLidarData =  self.inputArgs[0]
         self.imageFolderName = utils.setImageFoldername()
         self.imageNumber = 0
         self.imageFrequency = 10
