@@ -2,33 +2,24 @@ import setup_path
 import airsim
 import math
 import time
-import argparse
 
 import utilities as utils
 import lidarUtils
+import argumentParser as parsing
 
 import numpy as np
 
-def parseCLIargs():
-    parser = argparse.ArgumentParser("Parses arguments from cli")
-    parser.add_argument("-sl","-save_lidar",default=False ,action="store_true")
-    parser.add_argument("points", nargs=3, default=[0,0,0],help="Specifies a point the \
-    drone will try to reach")
-    #parser.add_argument("path",help="Specifies a path the drone will try to reach from \
-    #a given file")
-    args = parser.parse_args()
-    saveBoolean = args.sl
-    points = [int(args.points[0]),int(args.points[1]),int(args.points[2])]
-    return [saveBoolean, points]
+
 
 class ObstacleAvoidance:
     def __init__(self):
-        """ Setup connection tot AirSim """
+        """ Setup connection tot AirSim and parsing args"""
+        self.args = parsing.parseCLIargs()
         self.client = airsim.MultirotorClient()
         self.client.confirmConnection()
         self.client.enableApiControl(True)        
         self.client.takeoffAsync().join()
-        self.inputArgs = parseCLIargs()
+        
 
 
 
@@ -44,17 +35,17 @@ class ObstacleAvoidance:
         self.iteration = 0
 
         # The goal the drone is trying to reach
-        #self.goal = airsim.Vector3r(0, 200, -2)
+        #self.goal = airsim.Vector3r(100, 0, -1)
+        if self.args.followPath:
+            # List of airsim.Vector3r to follow
 
-        self.goal = airsim.Vector3r(self.inputArgs[1][0], self.inputArgs[1][1], self.inputArgs[1][2])
-        print("The goal is now: "+str(self.goal))
+            self.path = utils.loadPathFromPotreeJSON(filename = self.args.path)
+            self.pathIterator = 0
+            self.goal = self.path[self.pathIterator]
+        else:
+            self.goal = airsim.Vector3r(self.args.points[0], self.args.points[1], self.args.points[2])
+    
 
-        # List of airsim.Vector3r to follow
-        # self.path = utils.loadPathFromPotreeJSON()
-        # self.pathIterator = 0
-        # self.goal = self.path[self.pathIterator]
-
-        self.saveLidarData =  self.inputArgs[0]
         self.imageFolderName = utils.setImageFoldername()
         self.imageNumber = 0
         self.imageFrequency = 10
@@ -71,7 +62,7 @@ class ObstacleAvoidance:
 
             # Thought this was the part that was responsible for saving lidar data
             # Made the variable initialized in init decide if the program saves LidaData
-            if self.saveLidarData:
+            if self.args.sl:
                 lidarUtils.handleLidarData(self.client, filename="OdinBlocks")
                 utils.savePositionToFile(self.client, filename="OdinBlocks")
                 if(time.thread_time() - self.lastImageTime > self.imageFrequency):
@@ -79,14 +70,7 @@ class ObstacleAvoidance:
                     self.imageNumber += 1
                     self.lastImageTime = time.thread_time()
 
-            # lidarUtils.handleLidarData(self.client, filename="OdinBlocks")
-            # utils.savePositionToFile(self.client, filename="OdinBlocks")
-            # if(time.thread_time() - self.lastImageTime > self.imageFrequency):
-            #     self.saveImage()
-            #     self.imageNumber += 1
-            #     self.lastImageTime = time.thread_time()
             self.iteration += 1
-            # time.sleep(self.waitTime)
         print("Ended")
 
     def avoid(self):
