@@ -22,23 +22,23 @@ def parseCLIargs():
     drone will try to reach from a given file. Format: -path filename")
 
     args = parser.parse_args() #Makes the namespace dict that will be returned
+    
     if args.points == None and args.path == None:
         args.points = pointDef
         args.followPath = False
-        print(args)
-        print(args.points)
     elif args.points == None and args.path != None:
-        print(args)
         print(args.path[0])
         args.path = checkF(args.path[0])
         args.followPath = True
-        print(args)
     elif args.points != None:
-        args.followPath = False
-        print(args)
+        args.followPath = False  
     
-    #hmmm saveImage and savePos just boolean or need a file location?
-    #iaf mer func as checkF to check if writeable
+    # Logic for the additional save features with specific file/folder names
+    if args.saveImageFolder != None:
+        args.saveImage = True
+    if args.savePosFile != None:
+        args.savePos = True
+
     #More args?
     return args
 
@@ -58,7 +58,6 @@ def checkF(fileName):
             print("Other error with "+fileName)
             return pathDefFile
 
-'''
+
 if __name__ == "__main__":
     inputten = parseCLIargs()
-'''

@@ -43,10 +43,13 @@ class ObstacleAvoidance:
             self.pathIterator = 0
             self.goal = self.path[self.pathIterator]
         else:
-            self.goal = airsim.Vector3r(self.args.points[0], self.args.points[1], self.args.points[2])
+            self.goal = airsim.Vector3r(self.args.points[0], self.args.points[1], self.args.points[2])    
     
+        if self.args.saveImageFolder != None:
+            self.imageFolderName = self.args.saveImageFolder
+        else:
+            self.imageFolderName = utils.setImageFoldername()
 
-        self.imageFolderName = utils.setImageFoldername()
         self.imageNumber = 0
         self.imageFrequency = 10
         self.lastImageTime = time.thread_time()
@@ -62,13 +65,15 @@ class ObstacleAvoidance:
 
             # Thought this was the part that was responsible for saving lidar data
             # Made the variable initialized in init decide if the program saves LidaData
-            if self.args.sl:
-                lidarUtils.handleLidarData(self.client, filename="OdinBlocks")
-                utils.savePositionToFile(self.client, filename="OdinBlocks")
-                if(time.thread_time() - self.lastImageTime > self.imageFrequency):
-                    self.saveImage()
-                    self.imageNumber += 1
-                    self.lastImageTime = time.thread_time()
+            if self.args.sl or self.args.saveImage or self.args.savePos:
+                if self.args.sl or self.args.savePos:
+                    lidarUtils.handleLidarData(self.client, filename="OdinBlocks")
+                    utils.savePositionToFile(self.client, filename="OdinBlocks", foldername=self.imageFolderName)
+                if self.args.sl or self.args.saveImage:
+                    if(time.thread_time() - self.lastImageTime > self.imageFrequency):
+                        self.saveImage()
+                        self.imageNumber += 1
+                        self.lastImageTime = time.thread_time()
 
             self.iteration += 1
         print("Ended")
