@@ -33,7 +33,6 @@ def parseCLIargs():
         args.points = pointDef
         args.followPath = False
     elif args.points == None and args.path != None:
-        print(args.path[0])
         args.path = checkF(args.path[0])
         args.followPath = True
     elif args.points != None:
@@ -64,6 +63,7 @@ def checkF(fileName):
             print("Other error with "+fileName)
             return pathDefFile
 
-
+'''
 if __name__ == "__main__":
     inputten = parseCLIargs()
+'''
