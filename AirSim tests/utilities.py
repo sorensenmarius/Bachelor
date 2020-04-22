@@ -17,7 +17,7 @@ def savePositionToFile(client, foldername="droneData", filename="position"):
     except FileNotFoundError:
         print(f'Positional data not saved. Directory "{foldername}" not found.')
 
-def loadPath(foldername="paths", filename="potreePath"):
+def loadPath(foldername="paths", filename="potreePath.json"):
     """Returns a list of formatted points from a JSON file extracted from Potree"""
     import json
     import airsim
