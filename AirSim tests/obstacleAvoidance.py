@@ -21,8 +21,6 @@ class ObstacleAvoidance:
         self.client.takeoffAsync().join()
         
 
-
-
         # Variables
 
         # Shorter distance = too close
@@ -51,7 +49,7 @@ class ObstacleAvoidance:
             self.imageFolderName = utils.setImageFoldername()
 
         self.imageNumber = 0
-        self.imageFrequency = 10
+        self.imageFrequency = 3
         self.lastImageTime = time.thread_time()
 
     def execute(self):
@@ -62,7 +60,6 @@ class ObstacleAvoidance:
             self.updateDronePose()
             self.avoid()
             self.updateGoal()
-
             # Thought this was the part that was responsible for saving lidar data
             # Made the variable initialized in init decide if the program saves LidaData
             if self.args.sl or self.args.saveImage or self.args.savePos:
@@ -74,7 +71,6 @@ class ObstacleAvoidance:
                         self.saveImage()
                         self.imageNumber += 1
                         self.lastImageTime = time.thread_time()
-
             self.iteration += 1
         print("Ended")
 
@@ -100,9 +96,7 @@ class ObstacleAvoidance:
         for i in range(len(depth)):
             if depth[i] > 1: depth[i] = 1
 
-            # Value 255 = 100 meters range
-            # This multiplication converts from 0 - 255 value to approx. meters in range 0 - 100 for human readability
-            depth[i] *= 255 * 0.392157
+            depth[i] *= 100
         depth = depth.reshape(result.height, result.width)
         self.depth = depth
     
@@ -116,7 +110,6 @@ class ObstacleAvoidance:
         self.middle = splits[1]
         self.right = splits[2]
     
-
     def calculateTooClosePercentage(self, m):
         """ Calculates the percentage of pixels in a matrix that is under a threshold """
         counter = 0
@@ -150,7 +143,6 @@ class ObstacleAvoidance:
         """ Sets the pitch, roll and yaw of the drone to the ObejectAvoidance object """
         self.pitch, self.roll, self.yaw = airsim.to_eularian_angles(self.client.simGetVehiclePose().orientation)
 
-    # Movement functions
     def fly(self, yaw):
         """ Flies toward the given yaw """
         vx = math.cos(yaw)
@@ -207,7 +199,7 @@ class ObstacleAvoidance:
             Should be used if the drone is following a path
         """
         if self.client.simGetVehiclePose().position.distance_to(self.goal) < 3:
-            if self.pathIterator < len(self.path):
+            if self.pathIterator < len(self.path) - 1:
                 self.pathIterator += 1
                 print(f'New goal set')
             else:

@@ -17,21 +17,40 @@ def savePositionToFile(client, foldername="droneData", filename="position"):
     except FileNotFoundError:
         print(f'Positional data not saved. Directory "{foldername}" not found.')
 
-def loadPathFromPotreeJSON(foldername="paths", filename="potreePath"):
+def loadPath(foldername="paths", filename="potreePath.json"):
     """Returns a list of formatted points from a JSON file extracted from Potree"""
     import json
     import airsim
 
-    with open(f'{foldername}/{filename}.json', 'r') as f:
-        data = json.load(f)
-        points = []
-        for feature in data['features']:
-            p = feature['geometry']['coordinates']
+    fSplit = filename.split(".")
+    if len(fSplit) < 2:
+        raise FileNotFoundError(f'{filename} not found. Remember to include filetype (e.g. .txt or .json)')
 
-            # Invert the z-axis because AirSim uses NED coordinates
-            points.append(airsim.Vector3r(p[0], p[1], p[2] * -1))
 
-        return points[::-1]
+
+    filetype = fSplit[len(fSplit) - 1]
+
+    if filetype == "txt":
+        with open(f'{foldername}/{filename}', 'r') as f:
+            points = []
+            for line in f:
+                p = line.strip().split(" ")
+                points.append(airsim.Vector3r(float(p[0]), float(p[1]), float(p[2]) * -1))
+
+            return points
+    elif filetype == "json":
+        with open(f'{foldername}/{filename}', 'r') as f:
+            data = json.load(f)
+            points = []
+            for feature in data['features']:
+                p = feature['geometry']['coordinates']
+
+                # Invert the z-axis because AirSim uses NED coordinates
+                points.append(airsim.Vector3r(p[0], p[1], p[2] * -1))
+
+            return points
+    else:
+        raise NotImplementedError(f'Path filetype "{filetype}" is not supported.')
 
 
 def setImageFoldername(foldername="pics"):
@@ -46,4 +65,3 @@ def setImageFoldername(foldername="pics"):
         nameCounter += 1
     os.makedirs(f'./pictures/{currentFoldername}')
     return f'./pictures/{currentFoldername}'
-
