@@ -5,16 +5,21 @@ import time
 
 import utilities as utils
 import lidarUtils
+import argumentParser as parsing
 
 import numpy as np
 
+
+
 class ObstacleAvoidance:
     def __init__(self):
-        """ Setup connection tot AirSim """
+        """ Setup connection tot AirSim and parsing args"""
+        self.args = parsing.parseCLIargs()
         self.client = airsim.MultirotorClient()
         self.client.confirmConnection()
         self.client.enableApiControl(True)        
         self.client.takeoffAsync().join()
+        
 
         # Variables
 
@@ -28,14 +33,21 @@ class ObstacleAvoidance:
         self.iteration = 0
 
         # The goal the drone is trying to reach
-        self.goal = airsim.Vector3r(100, 100, -2)
+        #self.goal = airsim.Vector3r(100, 0, -1)
+        if self.args.followPath:
+            # List of airsim.Vector3r to follow
 
-        # List of airsim.Vector3r to follow
-        # self.path = utils.loadPath(filename="testflight.txt")
-        # self.pathIterator = 0
-        # self.goal = self.path[self.pathIterator]
+            self.path = utils.loadPathFromPotreeJSON(filename = self.args.path)
+            self.pathIterator = 0
+            self.goal = self.path[self.pathIterator]
+        else:
+            self.goal = airsim.Vector3r(self.args.points[0], self.args.points[1], self.args.points[2])    
+    
+        if self.args.saveImageFolder != None:
+            self.imageFolderName = self.args.saveImageFolder
+        else:
+            self.imageFolderName = utils.setImageFoldername()
 
-        self.imageFolderName = utils.setImageFoldername()
         self.imageNumber = 0
         self.imageFrequency = 3
         self.lastImageTime = time.thread_time()
@@ -48,15 +60,18 @@ class ObstacleAvoidance:
             self.updateDronePose()
             self.avoid()
             self.updateGoal()
-            # self.showImage()
-            # lidarUtils.handleLidarData(self.client, filename="Neighborhood")
-            # utils.savePositionToFile(self.client, filename="testflight")
-            # if(time.thread_time() - self.lastImageTime > self.imageFrequency):
-            #     self.saveImage()
-            #     self.imageNumber += 1
-            #     self.lastImageTime = time.thread_time()
+            # Thought this was the part that was responsible for saving lidar data
+            # Made the variable initialized in init decide if the program saves LidaData
+            if self.args.sl or self.args.saveImage or self.args.savePos:
+                if self.args.sl or self.args.savePos:
+                    lidarUtils.handleLidarData(self.client, filename="OdinBlocks")
+                    utils.savePositionToFile(self.client, filename="OdinBlocks", foldername=self.imageFolderName)
+                if self.args.sl or self.args.saveImage:
+                    if(time.thread_time() - self.lastImageTime > self.imageFrequency):
+                        self.saveImage()
+                        self.imageNumber += 1
+                        self.lastImageTime = time.thread_time()
             self.iteration += 1
-            # time.sleep(self.waitTime)
         print("Ended")
 
     def avoid(self):
@@ -216,6 +231,7 @@ class ObstacleAvoidance:
 
 # main
 if __name__ == "__main__":
+    
     avoid = ObstacleAvoidance()
     try:
         avoid.execute()
