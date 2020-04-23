@@ -183,14 +183,22 @@ class ObstacleAvoidance:
         pos = self.client.simGetVehiclePose().position
         dX = self.goal.x_val - pos.x_val 
         dY = self.goal.y_val - pos.y_val 
-        testYaw = math.atan2(dY, dX)
+        dest = math.atan2(dY, dX)
         yaw = self.yaw
-        if(testYaw < yaw):
-            if(self.calculateTooClosePercentage(self.left) < self.percentage):
-                yaw = self.yaw - (self.yaw - testYaw) / 5
-        else:
+
+        a = dest - yaw
+        if a > math.pi:
+            a -= math.pi * 2
+        elif a < -math.pi:
+            a += math.pi * 2
+
+        a = abs(a)
+        if((dest - yaw + math.pi * 2) % math.pi * 2 < (math.pi)):
             if(self.calculateTooClosePercentage(self.right) < self.percentage):
-                yaw = self.yaw - (self.yaw - testYaw) / 5
+                yaw = (self.yaw + a / 5)
+        else:
+            if(self.calculateTooClosePercentage(self.left) < self.percentage):
+                yaw = (self.yaw - a / 5)
         self.fly(yaw)
 
     def updateGoal(self):
