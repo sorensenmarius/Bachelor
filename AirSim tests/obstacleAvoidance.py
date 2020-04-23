@@ -32,19 +32,16 @@ class ObstacleAvoidance:
         self.running = True
         self.iteration = 0
 
-        # The goal the drone is trying to reach
-        #self.goal = airsim.Vector3r(100, 0, -1)
         if self.args.followPath:
             # List of airsim.Vector3r to follow
-
-            self.path = utils.loadPathFromPotreeJSON(filename = self.args.path)
+            self.path = utils.loadPath(filename = self.args.path)
             self.pathIterator = 0
             self.goal = self.path[self.pathIterator]
         else:
             self.goal = airsim.Vector3r(self.args.points[0], self.args.points[1], self.args.points[2])    
     
         if self.args.saveImageFolder != None:
-            self.imageFolderName = self.args.saveImageFolder
+            self.imageFolderName = utils.setImageFoldername(self.args.saveImageFolder)
         else:
             self.imageFolderName = utils.setImageFoldername()
 
@@ -62,15 +59,18 @@ class ObstacleAvoidance:
             self.updateGoal()
             # Thought this was the part that was responsible for saving lidar data
             # Made the variable initialized in init decide if the program saves LidaData
-            if self.args.sl or self.args.saveImage or self.args.savePos:
-                if self.args.sl or self.args.savePos:
-                    lidarUtils.handleLidarData(self.client, filename="OdinBlocks")
-                    utils.savePositionToFile(self.client, filename="OdinBlocks", foldername=self.imageFolderName)
-                if self.args.sl or self.args.saveImage:
-                    if(time.thread_time() - self.lastImageTime > self.imageFrequency):
-                        self.saveImage()
-                        self.imageNumber += 1
-                        self.lastImageTime = time.thread_time()
+            if self.args.sl:
+                lidarUtils.handleLidarData(self.client, filename="lidardata")
+            if self.args.savePos or self.args.savePosFile:
+                if self.args.savePosFile:
+                    utils.savePositionToFile(self.client, filename=self.args.savePosFile)
+                else:
+                    utils.savePositionToFile(self.client, filename="dronePos")
+            if self.args.saveImage:
+                if(time.thread_time() - self.lastImageTime > self.imageFrequency):
+                    self.saveImage()
+                    self.imageNumber += 1
+                    self.lastImageTime = time.thread_time()
             self.iteration += 1
         print("Ended")
 
