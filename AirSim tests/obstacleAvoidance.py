@@ -192,13 +192,12 @@ class ObstacleAvoidance:
         elif a < -math.pi:
             a += math.pi * 2
 
-        a = abs(a)
-        if((dest - yaw + math.pi * 2) % math.pi * 2 < (math.pi)):
+        if(a > 0):
             if(self.calculateTooClosePercentage(self.right) < self.percentage):
                 yaw = (self.yaw + a / 5)
         else:
             if(self.calculateTooClosePercentage(self.left) < self.percentage):
-                yaw = (self.yaw - a / 5)
+                yaw = (self.yaw + a / 5)
         self.fly(yaw)
 
     def updateGoal(self):
