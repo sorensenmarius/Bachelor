@@ -11,11 +11,14 @@
         "Lidar": {
           "SensorType": 6,
           "Enabled": true,
-          "VerticalFOVUpper": 10,
-          "VerticalFOVLower": 0,
-          "HorizontalFOVStart": -20,
-          "HorizontalFOVEnd": 20,
-          "DrawDebugPoints": false
+          "VerticalFOVUpper": -30,
+          "VerticalFOVLower": 30,
+          "HorizontalFOVStart": -180,
+          "HorizontalFOVEnd": 180,
+          "DrawDebugPoints": false,
+          "NumberOfChannels": 16,
+					"RotationsPerSecond": 10,
+					"PointsPerSecond": 50000
         }
       }
     }
