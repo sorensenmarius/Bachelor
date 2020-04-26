@@ -17,8 +17,8 @@
           "HorizontalFOVEnd": 180,
           "DrawDebugPoints": false,
           "NumberOfChannels": 16,
-					"RotationsPerSecond": 10,
-					"PointsPerSecond": 50000
+	  "RotationsPerSecond": 10,
+	  "PointsPerSecond": 50000
         }
       }
     }
