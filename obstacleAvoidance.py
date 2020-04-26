@@ -221,7 +221,6 @@ class ObstacleAvoidance:
         import airsim
         
         img = self.client.simGetImage("0", airsim.ImageType.Scene)
-        # airsim.write_file(os.path.normpath(f'{foldername}/{str(self.imageNumber)}.png'), img)
         with open(f'{self.imageFolderName}/{str(self.imageNumber)}.png', 'wb') as f:
             f.write(img)
         with open(f'{self.imageFolderName}/pos.txt', 'a') as f:
