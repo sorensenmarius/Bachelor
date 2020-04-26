@@ -18,7 +18,7 @@ def writeLidarDataToDisk(data, foldername, filename):
             for point in data:
                 f.write(f'{point[0]} {point[1]} {point[2] * -1}\n')
     except FileNotFoundError:
-        print(f'LidarData not saved. Directory "{foldername}" not found.')
+        print(f'LidarData not saved. File "./{foldername}/{filename}" not found.')
 
 
 def getLidarData(client):
