@@ -1,4 +1,7 @@
-# Bachelor
+# Autonomous Drone Inspection: Navigation
+Bachelor thesis for the University of Stavanger and Avium drone organization in collaboration with Nordic Unmanned. 
+
+Full report in PDF file in repository.
 
 ## Running algorithm
 1. Download any AirSim binary from the [AirSim releases](https://github.com/microsoft/AirSim/releases)
