@@ -6,10 +6,11 @@ import time
 
 def parseLidarData(data):
     """Reshapes the lidarData object to an array of [X,Y,Z]"""
-
-    points = numpy.array(data.point_cloud, dtype=numpy.dtype('f4'))
-    points = numpy.reshape(points, (int(points.shape[0]/3), 3))
-    return points
+    if len(data.point_cloud) > 2:
+        points = numpy.array(data.point_cloud, dtype=numpy.dtype('f4'))
+        points = numpy.reshape(points, (int(points.shape[0]/3), 3))
+        return points
+    return None
 
 def writeLidarDataToDisk(data, foldername, filename):
     """Writes the lidar data to the spicified folder with the specified file name"""
@@ -23,7 +24,7 @@ def writeLidarDataToDisk(data, foldername, filename):
 
 def getLidarData(client):
     """Gets and returns the formatted list of lidar data"""
-    d = client.getLidarData()
+    d = client.getLidarData(lidar_name="Lidar")
     if len(d.point_cloud) < 3:
         print("No points received in lidar data")
         return []

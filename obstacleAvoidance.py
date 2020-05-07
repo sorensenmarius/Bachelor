@@ -48,6 +48,7 @@ class ObstacleAvoidance:
         self.imageNumber = 0
         self.imageFrequency = 3
         self.lastImageTime = time.thread_time()
+        self.height = -1
 
     def execute(self):
         """ Main control and high-level logic """
@@ -76,11 +77,33 @@ class ObstacleAvoidance:
 
     def avoid(self):
         """ Main collision avoidance logic """
-        if self.calculateTooClosePercentage(self.middle) > self.percentage:
-            if self.calculateTooClosePercentage(self.left) > self.calculateTooClosePercentage(self.right):
+        m = self.calculateTooClosePercentage(self.middle)
+        if  m > self.percentage:
+            l = self.calculateTooClosePercentage(self.left)
+            r = self.calculateTooClosePercentage(self.right)
+
+            if l > r and r < self.percentage:
                 self.turnRight()
-            else:
+            elif r > l and l < self.percentage:
                 self.turnLeft()
+            else:
+                pos = self.client.simGetVehiclePose().position
+                t = self.calculateTooClosePercentage(self.top)
+                print(t)
+                if t < self.percentage: 
+                    self.height = pos.z_val - 0.5
+                    print("going up")
+                    self.turnTowardsGoal()
+                else:
+                    self.client.moveByVelocityZAsync(
+                        0,
+                        0,
+                        self.height,
+                        1
+                    )
+                    print("No possible moves, exiting")
+                    self.running = False
+                    self.stop()
         else:
             self.turnTowardsGoal()
     
@@ -103,9 +126,11 @@ class ObstacleAvoidance:
     def splitImageData(self):
         """ Splits the image data in 3 matrices which indicate the three possible moves (left, middle, right) """
         # Split and only consider the middle data
-        vsplit = np.array_split(self.depth, 3)[1]
+        vsplits = np.array_split(self.depth, 3)
+        self.top = np.array_split(vsplits[0], 3, 1)[1]
+        self.bottom = vsplits[2]
         # 1 indicates what axis to split
-        splits = np.array_split(vsplit, 3, 1) 
+        splits = np.array_split(vsplits[1], 3, 1) 
         self.left = splits[0]
         self.middle = splits[1]
         self.right = splits[2]
@@ -150,7 +175,7 @@ class ObstacleAvoidance:
         self.client.moveByVelocityZAsync(
             vx,
             vy,
-            -1,
+            self.height,
             2,
             airsim.DrivetrainType.ForwardOnly,
             airsim.YawMode(False, 0)
@@ -192,12 +217,21 @@ class ObstacleAvoidance:
         elif a < -math.pi:
             a += math.pi * 2
 
+        bot = self.calculateTooClosePercentage(self.bottom)
         if(a > 0):
             if(self.calculateTooClosePercentage(self.right) < self.percentage):
                 yaw = (self.yaw + a / 5)
         else:
             if(self.calculateTooClosePercentage(self.left) < self.percentage):
                 yaw = (self.yaw + a / 5)
+        if bot < self.percentage:
+            lidarData = self.client.getLidarData(lidar_name="LidarD")
+            if len(lidarData.point_cloud) > 2:
+                pc = lidarUtils.parseLidarData(lidarData)
+                for p in pc:
+                    if pos.distance_to(airsim.Vector3r(p[0], p[1], p[2])) > 1:
+                        self.height = self.height + (self.goal.z_val - self.client.simGetVehiclePose().position.z_val) / 5
+                        break
         self.fly(yaw)
 
     def updateGoal(self):

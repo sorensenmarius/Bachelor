@@ -19,6 +19,18 @@
           "NumberOfChannels": 16,
 					"RotationsPerSecond": 10,
 					"PointsPerSecond": 50000
+        },
+        "LidarD": {
+          "SensorType": 6,
+          "Enabled": true,
+          "VerticalFOVUpper": -88,
+          "VerticalFOVLower": -92,
+          "HorizontalFOVStart": -2,
+          "HorizontalFOVEnd": 2,
+          "DrawDebugPoints": true,
+          "NumberOfChannels": 16,
+					"RotationsPerSecond": 10,
+          "PointsPerSecond": 5000
         }
       }
     }
