@@ -81,18 +81,15 @@ class ObstacleAvoidance:
         if  m > self.percentage:
             l = self.calculateTooClosePercentage(self.left)
             r = self.calculateTooClosePercentage(self.right)
-
-            if l > r and r < self.percentage:
+            if l > r and r < self.percentage * 3:
                 self.turnRight()
-            elif r > l and l < self.percentage:
+            elif r > l and l < self.percentage * 3:
                 self.turnLeft()
             else:
                 pos = self.client.simGetVehiclePose().position
                 t = self.calculateTooClosePercentage(self.top)
-                print(t)
                 if t < self.percentage: 
                     self.height = pos.z_val - 0.5
-                    print("going up")
                     self.turnTowardsGoal()
                 else:
                     self.client.moveByVelocityZAsync(

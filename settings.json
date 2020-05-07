@@ -27,7 +27,7 @@
           "VerticalFOVLower": -92,
           "HorizontalFOVStart": -2,
           "HorizontalFOVEnd": 2,
-          "DrawDebugPoints": true,
+          "DrawDebugPoints": false,
           "NumberOfChannels": 16,
 					"RotationsPerSecond": 10,
           "PointsPerSecond": 5000
