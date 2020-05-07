@@ -201,6 +201,7 @@ class ObstacleAvoidance:
             Turns the drone towards the goal in self.goal
             Checks if it is safe to turn left or right before turning
                 Goes straight if turning is not safe
+            Changes the height towards the goal height if it is safe 
         """
         pos = self.client.simGetVehiclePose().position
         dX = self.goal.x_val - pos.x_val 
@@ -214,20 +215,31 @@ class ObstacleAvoidance:
         elif a < -math.pi:
             a += math.pi * 2
 
-        bot = self.calculateTooClosePercentage(self.bottom)
         if(a > 0):
             if(self.calculateTooClosePercentage(self.right) < self.percentage):
                 yaw = (self.yaw + a / 5)
         else:
             if(self.calculateTooClosePercentage(self.left) < self.percentage):
                 yaw = (self.yaw + a / 5)
-        if bot < self.percentage:
+
+        # Changing altitude
+        bot = self.calculateTooClosePercentage(self.bottom)
+        top = self.calculateTooClosePercentage(self.top)
+        if pos.z_val < self.goal.z_val and bot < self.percentage:
             lidarData = self.client.getLidarData(lidar_name="LidarD")
             if len(lidarData.point_cloud) > 2:
                 pc = lidarUtils.parseLidarData(lidarData)
                 for p in pc:
                     if pos.distance_to(airsim.Vector3r(p[0], p[1], p[2])) > 1:
-                        self.height = self.height + (self.goal.z_val - self.client.simGetVehiclePose().position.z_val) / 5
+                        self.height = self.height + (self.goal.z_val - pos.z_val) / 5
+                        break
+        elif pos.z_val > self.goal.z_val and top < self.percentage:
+            lidarData = self.client.getLidarData(lidar_name="LidarT")
+            if len(lidarData.point_cloud) > 2:
+                pc = lidarUtils.parseLidarData(lidarData)
+                for p in pc:
+                    if pos.distance_to(airsim.Vector3r(p[0], p[1], p[2])) > 1:
+                        self.height = self.height + (self.goal.z_val - pos.z_val) / 5
                         break
         self.fly(yaw)
 
