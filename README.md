@@ -1,5 +1,5 @@
 # Autonomous Drone Inspection: Navigation
-Bachelor thesis for the University of Stavanger and Avium drone organization in collaboration with Nordic Unmanned. 
+Bachelor thesis for the University of Stavanger and Avium drone organization.
 
 Full report in PDF file in repository.
 
